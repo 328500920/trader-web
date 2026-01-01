@@ -33,15 +33,11 @@
       </nav>
       
       <div class="header-right">
+        <!-- 全局搜索 -->
+        <GlobalSearch />
+        
         <!-- 主题切换 -->
-        <el-tooltip :content="themeStore.isDark ? '切换浅色' : '切换深色'">
-          <el-button circle @click="themeStore.toggleTheme">
-            <el-icon>
-              <Sunny v-if="themeStore.isDark" />
-              <Moon v-else />
-            </el-icon>
-          </el-button>
-        </el-tooltip>
+        <ThemeSwitch />
         
         <!-- 用户下拉菜单 -->
         <el-dropdown trigger="click" @command="handleCommand">
@@ -122,6 +118,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { useThemeStore, useUserStore } from '@/store'
 import { ElMessageBox } from 'element-plus'
 import TraderReminder from '@/components/TraderReminder.vue'
+import ThemeSwitch from '@/components/ThemeSwitch.vue'
+import GlobalSearch from '@/components/GlobalSearch.vue'
 
 const route = useRoute()
 const router = useRouter()

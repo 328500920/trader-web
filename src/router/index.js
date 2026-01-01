@@ -49,6 +49,60 @@ const routes = [
             meta: { title: '章节学习', hidden: true }
           },
           {
+            path: 'case',
+            name: 'CaseList',
+            component: () => import('@/views/learn/case/index.vue'),
+            meta: { title: '实战案例' }
+          },
+          {
+            path: 'case/:id',
+            name: 'CaseDetail',
+            component: () => import('@/views/learn/case/detail.vue'),
+            meta: { title: '案例详情', hidden: true }
+          },
+          {
+            path: 'resource',
+            name: 'ResourceList',
+            component: () => import('@/views/learn/resource/index.vue'),
+            meta: { title: '学习资源' }
+          },
+          {
+            path: 'topic',
+            name: 'TopicList',
+            component: () => import('@/views/learn/topic/index.vue'),
+            meta: { title: '专题学习' }
+          },
+          {
+            path: 'topic/:id',
+            name: 'TopicDetail',
+            component: () => import('@/views/learn/topic/detail.vue'),
+            meta: { title: '专题详情', hidden: true }
+          },
+          {
+            path: 'quiz',
+            name: 'QuizList',
+            component: () => import('@/views/learn/quiz/index.vue'),
+            meta: { title: '章节测验' }
+          },
+          {
+            path: 'quiz/:chapterId',
+            name: 'QuizTest',
+            component: () => import('@/views/learn/quiz/test.vue'),
+            meta: { title: '测验答题', hidden: true }
+          },
+          {
+            path: 'tool-guide',
+            name: 'ToolGuideList',
+            component: () => import('@/views/learn/tool-guide/index.vue'),
+            meta: { title: '工具指南' }
+          },
+          {
+            path: 'tool-guide/:id',
+            name: 'ToolGuideDetail',
+            component: () => import('@/views/learn/tool-guide/detail.vue'),
+            meta: { title: '工具详情', hidden: true }
+          },
+          {
             path: 'progress',
             name: 'Progress',
             component: () => import('@/views/learn/progress/index.vue'),
@@ -59,6 +113,24 @@ const routes = [
             name: 'NoteList',
             component: () => import('@/views/learn/note/index.vue'),
             meta: { title: '我的笔记' }
+          },
+          {
+            path: 'wrong-book',
+            name: 'WrongBook',
+            component: () => import('@/views/learn/wrong-book/index.vue'),
+            meta: { title: '错题本' }
+          },
+          {
+            path: 'favorite',
+            name: 'Favorite',
+            component: () => import('@/views/learn/favorite/index.vue'),
+            meta: { title: '我的收藏' }
+          },
+          {
+            path: 'patterns',
+            name: 'Patterns',
+            component: () => import('@/views/learn/patterns/index.vue'),
+            meta: { title: 'K线形态图鉴' }
           }
         ]
       },

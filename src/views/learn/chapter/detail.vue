@@ -68,11 +68,9 @@
 
         <!-- Markdown 内容 -->
         <article class="article-body">
-          <MdPreview 
-            :editorId="editorId"
-            :modelValue="chapter.content || '暂无内容'" 
+          <MdRenderer 
+            :content="chapter.content || '暂无内容'" 
             :theme="themeStore.isDark ? 'dark' : 'light'"
-            previewTheme="github"
             class="md-content"
           />
         </article>
@@ -134,10 +132,9 @@
           </el-button>
         </div>
         <div class="panel-content">
-          <MdPreview 
-            :modelValue="currentMaterial?.content || '暂无内容'" 
+          <MdRenderer 
+            :content="currentMaterial?.content || '暂无内容'" 
             :theme="themeStore.isDark ? 'dark' : 'light'"
-            previewTheme="github"
             class="material-md-content"
           />
         </div>
@@ -248,8 +245,9 @@
 <script setup>
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { MdPreview, MdCatalog } from 'md-editor-v3'
+import { MdCatalog } from 'md-editor-v3'
 import 'md-editor-v3/lib/preview.css'
+import MdRenderer from '@/components/MdRenderer/index.vue'
 import { useThemeStore } from '@/store'
 import { ElMessage } from 'element-plus'
 import { 

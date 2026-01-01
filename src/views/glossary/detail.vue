@@ -37,13 +37,13 @@
       <!-- 详细解释 -->
       <div class="section" v-if="term.detail">
         <h3>📖 详细解释</h3>
-        <MdPreview :modelValue="term.detail" />
+        <MdRenderer :content="term.detail" :theme="themeStore.isDark ? 'dark' : 'light'" />
       </div>
 
       <!-- 应用场景 -->
       <div class="section" v-if="term.application">
         <h3>💡 应用场景</h3>
-        <MdPreview :modelValue="term.application" />
+        <MdRenderer :content="term.application" :theme="themeStore.isDark ? 'dark' : 'light'" />
       </div>
 
       <!-- 示例 -->
@@ -92,11 +92,12 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ArrowLeft, Star } from '@element-plus/icons-vue'
 import { getTermById, toggleFavorite } from '@/api/glossary'
-import { MdPreview } from 'md-editor-v3'
-import 'md-editor-v3/lib/preview.css'
+import MdRenderer from '@/components/MdRenderer/index.vue'
+import { useThemeStore } from '@/store'
 
 const route = useRoute()
 const router = useRouter()
+const themeStore = useThemeStore()
 
 const loading = ref(false)
 const term = ref({})

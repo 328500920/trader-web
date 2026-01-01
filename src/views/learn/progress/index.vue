@@ -82,6 +82,18 @@
       </div>
     </div>
 
+    <!-- 学习日历与打卡热力图 -->
+    <div class="calendar-section">
+      <div class="section-header">
+        <h2>📅 学习日历</h2>
+        <el-radio-group v-model="calendarMode" size="small">
+          <el-radio-button label="calendar">日历</el-radio-button>
+          <el-radio-button label="heatmap">热力图</el-radio-button>
+        </el-radio-group>
+      </div>
+      <LearningCalendar :mode="calendarMode" :days="90" />
+    </div>
+
     <!-- 各阶段进度 -->
     <div class="stages-section">
       <div class="section-header">
@@ -183,6 +195,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getProgress, getCourseList } from '@/api/learn'
+import LearningCalendar from '@/components/LearningCalendar/index.vue'
 
 const progressColors = [
   { color: '#f56c6c', percentage: 20 },
@@ -206,6 +219,7 @@ const progress = ref({
 
 const courses = ref([])
 const timeline = ref([])
+const calendarMode = ref('heatmap')
 
 const loadProgress = async () => {
   try {
@@ -395,6 +409,17 @@ onMounted(() => {
 // 各阶段进度
 .stages-section {
   margin-bottom: 32px;
+}
+
+// 学习日历
+.calendar-section {
+  margin-bottom: 32px;
+  
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
 }
 
 .section-header {

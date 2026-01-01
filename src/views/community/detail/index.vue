@@ -16,7 +16,7 @@
       
       <h1>{{ post.title }}</h1>
       
-      <MdPreview :modelValue="post.content" :theme="themeStore.isDark ? 'dark' : 'light'" />
+      <MdRenderer :content="post.content" :theme="themeStore.isDark ? 'dark' : 'light'" />
       
       <div class="post-actions">
         <el-button :type="post.liked ? 'primary' : 'default'" @click="toggleLike">
@@ -52,7 +52,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { MdPreview } from 'md-editor-v3'
+import MdRenderer from '@/components/MdRenderer/index.vue'
 import { useThemeStore } from '@/store'
 import { ElMessage } from 'element-plus'
 
