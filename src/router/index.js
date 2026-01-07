@@ -30,11 +30,12 @@ const routes = [
         redirect: '/learn/course',
         meta: { title: '学习中心', icon: 'Reading' },
         children: [
+          // ===== 课程学习 =====
           {
             path: 'course',
             name: 'CourseList',
             component: () => import('@/views/learn/course/index.vue'),
-            meta: { title: '课程列表' }
+            meta: { title: '课程列表', group: '课程学习', groupIcon: 'Notebook' }
           },
           {
             path: 'course/:id',
@@ -49,28 +50,16 @@ const routes = [
             meta: { title: '章节学习', hidden: true }
           },
           {
-            path: 'case',
-            name: 'CaseList',
-            component: () => import('@/views/learn/case/index.vue'),
-            meta: { title: '实战案例' }
-          },
-          {
-            path: 'case/:id',
-            name: 'CaseDetail',
-            component: () => import('@/views/learn/case/detail.vue'),
-            meta: { title: '案例详情', hidden: true }
-          },
-          {
-            path: 'resource',
-            name: 'ResourceList',
-            component: () => import('@/views/learn/resource/index.vue'),
-            meta: { title: '学习资源' }
+            path: 'material/:id',
+            name: 'MaterialDetail',
+            component: () => import('@/views/learn/material/detail.vue'),
+            meta: { title: '学习资料', hidden: true }
           },
           {
             path: 'topic',
             name: 'TopicList',
             component: () => import('@/views/learn/topic/index.vue'),
-            meta: { title: '专题学习' }
+            meta: { title: '专题学习', group: '课程学习' }
           },
           {
             path: 'topic/:id',
@@ -82,7 +71,7 @@ const routes = [
             path: 'quiz',
             name: 'QuizList',
             component: () => import('@/views/learn/quiz/index.vue'),
-            meta: { title: '章节测验' }
+            meta: { title: '章节测验', group: '课程学习' }
           },
           {
             path: 'quiz/:chapterId',
@@ -91,10 +80,41 @@ const routes = [
             meta: { title: '测验答题', hidden: true }
           },
           {
+            path: 'video',
+            name: 'VideoList',
+            component: () => import('@/views/learn/video/index.vue'),
+            meta: { title: '视频课程', group: '课程学习' }
+          },
+          {
+            path: 'video/:id',
+            name: 'VideoDetail',
+            component: () => import('@/views/learn/video/detail.vue'),
+            meta: { title: '视频播放', hidden: true }
+          },
+          // ===== 实战提升 =====
+          {
+            path: 'case',
+            name: 'CaseList',
+            component: () => import('@/views/learn/case/index.vue'),
+            meta: { title: '实战案例', group: '实战提升', groupIcon: 'TrendCharts' }
+          },
+          {
+            path: 'case/:id',
+            name: 'CaseDetail',
+            component: () => import('@/views/learn/case/detail.vue'),
+            meta: { title: '案例详情', hidden: true }
+          },
+          {
+            path: 'patterns',
+            name: 'Patterns',
+            component: () => import('@/views/learn/patterns/index.vue'),
+            meta: { title: 'K线形态图鉴', group: '实战提升' }
+          },
+          {
             path: 'tool-guide',
             name: 'ToolGuideList',
             component: () => import('@/views/learn/tool-guide/index.vue'),
-            meta: { title: '工具指南' }
+            meta: { title: '工具指南', group: '实战提升' }
           },
           {
             path: 'tool-guide/:id',
@@ -102,35 +122,37 @@ const routes = [
             component: () => import('@/views/learn/tool-guide/detail.vue'),
             meta: { title: '工具详情', hidden: true }
           },
+          // ===== 学习资料 =====
+          {
+            path: 'resource',
+            name: 'ResourceList',
+            component: () => import('@/views/learn/resource/index.vue'),
+            meta: { title: '学习资源', group: '学习资料', groupIcon: 'FolderOpened' }
+          },
+          // ===== 我的学习 =====
           {
             path: 'progress',
             name: 'Progress',
             component: () => import('@/views/learn/progress/index.vue'),
-            meta: { title: '学习进度' }
+            meta: { title: '学习进度', group: '我的学习', groupIcon: 'User' }
           },
           {
             path: 'note',
             name: 'NoteList',
             component: () => import('@/views/learn/note/index.vue'),
-            meta: { title: '我的笔记' }
+            meta: { title: '我的笔记', group: '我的学习' }
           },
           {
             path: 'wrong-book',
             name: 'WrongBook',
             component: () => import('@/views/learn/wrong-book/index.vue'),
-            meta: { title: '错题本' }
+            meta: { title: '错题本', group: '我的学习' }
           },
           {
             path: 'favorite',
             name: 'Favorite',
             component: () => import('@/views/learn/favorite/index.vue'),
-            meta: { title: '我的收藏' }
-          },
-          {
-            path: 'patterns',
-            name: 'Patterns',
-            component: () => import('@/views/learn/patterns/index.vue'),
-            meta: { title: 'K线形态图鉴' }
+            meta: { title: '我的收藏', group: '我的学习' }
           }
         ]
       },
@@ -146,6 +168,12 @@ const routes = [
             name: 'TradeList',
             component: () => import('@/views/trade/list/index.vue'),
             meta: { title: '交易记录' }
+          },
+          {
+            path: 'record',
+            name: 'TradeRecord',
+            component: () => import('@/views/trade/record/index.vue'),
+            meta: { title: '成交记录' }
           },
           {
             path: 'plan',
@@ -170,6 +198,12 @@ const routes = [
             name: 'TradeDetail',
             component: () => import('@/views/trade/detail/index.vue'),
             meta: { title: '交易详情', hidden: true }
+          },
+          {
+            path: 'xray',
+            name: 'TradeXray',
+            component: () => import('@/views/trade/xray/index.vue'),
+            meta: { title: '交易X光' }
           },
           {
             path: 'analysis',
@@ -287,6 +321,48 @@ const routes = [
           }
         ]
       },
+      // 学员管理（管理员和讲师可见）
+      {
+        path: 'student',
+        name: 'StudentManage',
+        redirect: '/student/list',
+        meta: { title: '学员管理', icon: 'User', roles: ['admin', 'teacher'] },
+        children: [
+          {
+            path: 'list',
+            name: 'StudentList',
+            component: () => import('@/views/student/index.vue'),
+            meta: { title: '学员列表' }
+          },
+          {
+            path: 'detail/:id',
+            name: 'StudentDetail',
+            component: () => import('@/views/student/detail.vue'),
+            meta: { title: '学员详情', hidden: true }
+          }
+        ]
+      },
+      // 课程管理（管理员和讲师可见）
+      {
+        path: 'course-manage',
+        name: 'CourseManageMenu',
+        redirect: '/course-manage/course',
+        meta: { title: '课程管理', icon: 'Reading', roles: ['admin', 'teacher'] },
+        children: [
+          {
+            path: 'course',
+            name: 'CourseManageList',
+            component: () => import('@/views/system/course/index.vue'),
+            meta: { title: '课程列表' }
+          },
+          {
+            path: 'video',
+            name: 'VideoManage',
+            component: () => import('@/views/system/video/index.vue'),
+            meta: { title: '视频课程管理' }
+          }
+        ]
+      },
       // 个人中心
       {
         path: 'profile',
@@ -294,7 +370,7 @@ const routes = [
         component: () => import('@/views/profile/index.vue'),
         meta: { title: '个人中心', icon: 'User', hidden: true }
       },
-      // 系统管理
+      // 系统管理（仅管理员可见）
       {
         path: 'system',
         name: 'System',
@@ -308,10 +384,16 @@ const routes = [
             meta: { title: '用户管理' }
           },
           {
-            path: 'course',
-            name: 'CourseManage',
-            component: () => import('@/views/system/course/index.vue'),
-            meta: { title: '课程管理' }
+            path: 'ai-model',
+            name: 'AiModelManage',
+            component: () => import('@/views/system/ai-model/index.vue'),
+            meta: { title: 'AI模型管理' }
+          },
+          {
+            path: 'menu',
+            name: 'MenuManage',
+            component: () => import('@/views/system/menu/index.vue'),
+            meta: { title: '菜单管理' }
           }
         ]
       }
@@ -353,6 +435,8 @@ router.beforeEach(async (to, from, next) => {
   if (!userStore.userInfo) {
     try {
       await userStore.getUserInfo()
+      // 获取用户信息成功后加载菜单
+      await userStore.loadMenus()
     } catch (error) {
       userStore.resetState()
       next(`/login?redirect=${to.path}`)
@@ -360,10 +444,36 @@ router.beforeEach(async (to, from, next) => {
     }
   }
   
-  // 检查角色权限
-  if (to.meta.roles && !to.meta.roles.some(role => userStore.roles.includes(role))) {
-    next('/dashboard')
+  // 管理员放行所有路由
+  if (userStore.role === 'admin') {
+    next()
     return
+  }
+  
+  // 检查菜单权限（如果有后端菜单数据）
+  if (userStore.menuKeys && userStore.menuKeys.length > 0 && to.name) {
+    // 公共页面放行
+    const publicRoutes = ['Dashboard', 'Profile', 'NotFound']
+    if (publicRoutes.includes(to.name)) {
+      next()
+      return
+    }
+    
+    // 检查路由name是否在允许的菜单列表中
+    if (!userStore.menuKeys.includes(to.name)) {
+      // 检查是否是详情页等隐藏页面（通常父路由在菜单中）
+      const parentName = to.matched.find(r => r.name && userStore.menuKeys.includes(r.name))
+      if (!parentName) {
+        next('/dashboard')
+        return
+      }
+    }
+  } else {
+    // 降级：使用前端路由配置的角色权限
+    if (to.meta.roles && !to.meta.roles.includes(userStore.role)) {
+      next('/dashboard')
+      return
+    }
   }
   
   next()

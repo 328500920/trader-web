@@ -3,7 +3,7 @@
     <!-- 顶部导航栏 -->
     <header class="chapter-header">
       <div class="header-left">
-        <el-button class="back-btn" text @click="router.back()">
+        <el-button class="back-btn" text @click="goBackToCourse">
           <el-icon><ArrowLeft /></el-icon>
           <span>返回课程</span>
         </el-button>
@@ -74,6 +74,37 @@
             class="md-content"
           />
         </article>
+
+        <!-- 底部学习资料区域 -->
+        <div class="bottom-materials-section" v-if="materials.length > 0 || materialsLoading">
+          <div class="section-header">
+            <el-icon><FolderOpened /></el-icon>
+            <h3>学习资料</h3>
+            <span class="material-count" v-if="!materialsLoading">{{ materials.length }} 份</span>
+            <el-icon v-else class="is-loading"><Loading /></el-icon>
+          </div>
+          <div class="materials-grid">
+            <div 
+              v-for="item in materials" 
+              :key="item.id" 
+              class="material-card"
+              :class="`type-${item.materialType}`"
+              @click="openMaterialFullscreen(item)"
+            >
+              <div class="card-icon">
+                <el-icon v-if="item.materialType === 'markdown'"><Document /></el-icon>
+                <el-icon v-else-if="item.materialType === 'pdf'"><Reading /></el-icon>
+                <el-icon v-else-if="item.materialType === 'video'"><VideoPlay /></el-icon>
+                <el-icon v-else><Link /></el-icon>
+              </div>
+              <div class="card-content">
+                <span class="card-title">{{ item.title }}</span>
+                <span class="card-type">{{ getMaterialTypeName(item.materialType) }}</span>
+              </div>
+              <el-icon class="card-arrow"><ArrowRight /></el-icon>
+            </div>
+          </div>
+        </div>
 
         <!-- 底部操作区 -->
         <footer class="article-footer">
@@ -239,6 +270,147 @@
       </template>
     </el-dialog>
 
+    <!-- 移动端底部工具栏 -->
+    <div class="mobile-bottom-bar" v-if="isMobile">
+      <div class="bar-actions">
+        <button 
+          class="bar-btn" 
+          :class="{ active: mobileDrawerType === 'materials' && showMobileDrawer }"
+          @click="openMobileDrawer('materials')"
+        >
+          <el-icon><FolderOpened /></el-icon>
+          <span>资料</span>
+          <span class="badge" v-if="materials.length">{{ materials.length }}</span>
+        </button>
+        <button 
+          class="bar-btn"
+          :class="{ active: mobileDrawerType === 'toc' && showMobileDrawer }"
+          @click="openMobileDrawer('toc')"
+        >
+          <el-icon><Menu /></el-icon>
+          <span>目录</span>
+        </button>
+        <button 
+          class="bar-btn"
+          @click="showNoteDialog = true"
+        >
+          <el-icon><EditPen /></el-icon>
+          <span>笔记</span>
+        </button>
+        <button 
+          class="bar-btn primary"
+          @click="markComplete"
+          v-if="!chapter.isCompleted"
+        >
+          <el-icon><Check /></el-icon>
+          <span>完成</span>
+        </button>
+        <button 
+          class="bar-btn success"
+          v-else
+        >
+          <el-icon><CircleCheckFilled /></el-icon>
+          <span>已完成</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 移动端底部抽屉 -->
+    <Transition name="drawer">
+      <div class="mobile-drawer-mask" v-if="showMobileDrawer" @click="closeMobileDrawer"></div>
+    </Transition>
+    <Transition name="drawer-content">
+      <div 
+        class="mobile-drawer" 
+        v-if="showMobileDrawer"
+        :style="{ height: drawerHeight + 'px' }"
+      >
+        <!-- 抽屉头部（可拖拽） -->
+        <div 
+          class="drawer-header"
+          @touchstart="onDrawerTouchStart"
+          @touchmove="onDrawerTouchMove"
+          @touchend="onDrawerTouchEnd"
+        >
+          <div class="drawer-handle"></div>
+          <div class="drawer-title">
+            <template v-if="mobileDrawerType === 'materials'">
+              <el-icon><FolderOpened /></el-icon>
+              <span>学习资料</span>
+              <span class="count" v-if="materials.length">({{ materials.length }})</span>
+            </template>
+            <template v-else-if="mobileDrawerType === 'toc'">
+              <el-icon><Menu /></el-icon>
+              <span>章节目录</span>
+            </template>
+            <template v-else-if="mobileDrawerType === 'material-detail'">
+              <el-icon><Document /></el-icon>
+              <span>{{ currentMaterial?.title }}</span>
+            </template>
+          </div>
+          <button class="drawer-close" @click="closeMobileDrawer">
+            <el-icon><Close /></el-icon>
+          </button>
+        </div>
+
+        <!-- 抽屉内容 -->
+        <div class="drawer-body">
+          <!-- 资料列表 -->
+          <template v-if="mobileDrawerType === 'materials'">
+            <div class="mobile-materials-list" v-if="materials.length > 0">
+              <div 
+                v-for="item in materials" 
+                :key="item.id" 
+                class="mobile-material-item"
+                :class="`type-${item.materialType}`"
+                @click="handleMobileMaterialClick(item)"
+              >
+                <div class="material-icon">
+                  <el-icon v-if="item.materialType === 'markdown'"><Document /></el-icon>
+                  <el-icon v-else-if="item.materialType === 'pdf'"><Reading /></el-icon>
+                  <el-icon v-else-if="item.materialType === 'video'"><VideoPlay /></el-icon>
+                  <el-icon v-else><Link /></el-icon>
+                </div>
+                <div class="material-info">
+                  <span class="material-title">{{ item.title }}</span>
+                  <span class="material-desc">{{ getMaterialTypeName(item.materialType) }}</span>
+                </div>
+                <el-icon class="material-arrow"><ArrowRight /></el-icon>
+              </div>
+            </div>
+            <div class="empty-state" v-else>
+              <el-icon><FolderOpened /></el-icon>
+              <p>暂无学习资料</p>
+            </div>
+          </template>
+
+          <!-- 目录 -->
+          <template v-else-if="mobileDrawerType === 'toc'">
+            <div class="mobile-toc">
+              <MdCatalog 
+                :editorId="editorId" 
+                :scrollElement="scrollElement"
+                :theme="themeStore.isDark ? 'dark' : 'light'"
+                class="mobile-md-catalog"
+                @onClick="closeMobileDrawer"
+              />
+            </div>
+          </template>
+
+          <!-- 资料详情 -->
+          <template v-else-if="mobileDrawerType === 'material-detail'">
+            <div class="mobile-material-content">
+              <MdRenderer 
+                :content="currentMaterial?.content || '暂无内容'" 
+                :theme="themeStore.isDark ? 'dark' : 'light'"
+                class="mobile-md-content"
+              />
+            </div>
+          </template>
+        </div>
+      </div>
+    </Transition>
+
   </div>
 </template>
 
@@ -267,7 +439,8 @@ import {
   Notebook, 
   Plus,
   Close,
-  Loading
+  Loading,
+  TopRight
 } from '@element-plus/icons-vue'
 import { 
   getChapterDetail, 
@@ -292,6 +465,7 @@ const scrollElement = ref(null)
 
 const chapter = ref({
   id: null,
+  courseId: null,
   title: '',
   content: '',
   weekNumber: null,
@@ -324,6 +498,10 @@ const currentMaterial = ref(null)
 const leftPanelWidth = ref(35) // 左侧面板宽度百分比，初始 4:6
 const isResizing = ref(false)
 
+// 内嵌资料面板状态
+const inlineMaterialsExpanded = ref(false)
+const inlineExpandedMaterial = ref(null)
+
 // 获取资料类型名称
 const getMaterialTypeName = (type) => {
   const typeMap = {
@@ -333,6 +511,84 @@ const getMaterialTypeName = (type) => {
     'link': '链接'
   }
   return typeMap[type] || '资料'
+}
+
+// 内嵌资料面板点击处理
+const handleInlineMaterialClick = async (item) => {
+  // 链接类型：新标签页打开
+  if (item.materialType === 'link') {
+    window.open(item.linkUrl, '_blank')
+    return
+  }
+  
+  // PDF/视频类型：新标签页打开
+  if (item.materialType === 'pdf' || item.materialType === 'video') {
+    if (item.fileUrl) {
+      window.open(item.fileUrl, '_blank')
+    } else {
+      try {
+        const res = await getMaterialDetail(item.id)
+        if (res.code === 200 && res.data.fileUrl) {
+          window.open(res.data.fileUrl, '_blank')
+        }
+      } catch (error) {
+        ElMessage.error('无法打开资料')
+      }
+    }
+    return
+  }
+  
+  // Markdown 类型：切换展开/收起
+  if (item.materialType === 'markdown') {
+    if (inlineExpandedMaterial.value?.id === item.id) {
+      // 已展开，收起
+      inlineExpandedMaterial.value = null
+    } else {
+      // 展开新资料
+      try {
+        const res = await getMaterialDetail(item.id)
+        if (res.code === 200) {
+          inlineExpandedMaterial.value = res.data
+        }
+      } catch (error) {
+        ElMessage.error('加载资料失败')
+      }
+    }
+  }
+}
+
+// 打开资料详情页面（路由跳转）
+const openMaterialFullscreen = async (item) => {
+  // 链接类型：新标签页打开
+  if (item.materialType === 'link') {
+    window.open(item.linkUrl, '_blank')
+    return
+  }
+  
+  // PDF/视频类型：新标签页打开
+  if (item.materialType === 'pdf' || item.materialType === 'video') {
+    if (item.fileUrl) {
+      window.open(item.fileUrl, '_blank')
+    } else {
+      try {
+        const res = await getMaterialDetail(item.id)
+        if (res.code === 200 && res.data.fileUrl) {
+          window.open(res.data.fileUrl, '_blank')
+        }
+      } catch (error) {
+        ElMessage.error('无法打开资料')
+      }
+    }
+    return
+  }
+  
+  // Markdown 类型：路由跳转到资料详情页
+  if (item.materialType === 'markdown') {
+    router.push({
+      path: `/learn/material/${item.id}`,
+      query: { chapterId: route.params.id }
+    })
+  }
 }
 
 const handleMaterialClick = async (item) => {
@@ -432,6 +688,14 @@ const goToChapter = (ch) => {
   }
 }
 
+const goBackToCourse = () => {
+  if (chapter.value.courseId) {
+    router.push(`/learn/course/${chapter.value.courseId}`)
+  } else {
+    router.push('/learn')
+  }
+}
+
 const markComplete = async () => {
   try {
     await completeChapter(chapter.value.id)
@@ -497,16 +761,117 @@ const setupScrollElement = () => {
   })
 }
 
+// ========== 移动端相关 ==========
+const isMobile = ref(false)
+const showMobileDrawer = ref(false)
+const mobileDrawerType = ref('materials') // 'materials' | 'toc' | 'material-detail'
+const drawerHeight = ref(400)
+const minDrawerHeight = 200
+const maxDrawerHeight = window.innerHeight * 0.85
+
+// 检测是否移动端/平板（侧边栏隐藏时）
+const checkMobile = () => {
+  isMobile.value = window.innerWidth <= 1200
+}
+
+// 打开移动端抽屉
+const openMobileDrawer = (type) => {
+  mobileDrawerType.value = type
+  showMobileDrawer.value = true
+  drawerHeight.value = Math.min(400, maxDrawerHeight)
+  document.body.style.overflow = 'hidden'
+}
+
+// 关闭移动端抽屉
+const closeMobileDrawer = () => {
+  showMobileDrawer.value = false
+  document.body.style.overflow = ''
+  // 如果是从资料详情返回，回到资料列表
+  if (mobileDrawerType.value === 'material-detail') {
+    mobileDrawerType.value = 'materials'
+  }
+}
+
+// 移动端点击资料
+const handleMobileMaterialClick = async (item) => {
+  // 链接类型：新标签页打开
+  if (item.materialType === 'link') {
+    window.open(item.linkUrl, '_blank')
+    return
+  }
+  
+  // PDF/视频类型：新标签页打开
+  if (item.materialType === 'pdf' || item.materialType === 'video') {
+    if (item.fileUrl) {
+      window.open(item.fileUrl, '_blank')
+    } else {
+      try {
+        const res = await getMaterialDetail(item.id)
+        if (res.code === 200 && res.data.fileUrl) {
+          window.open(res.data.fileUrl, '_blank')
+        }
+      } catch (error) {
+        ElMessage.error('无法打开资料')
+      }
+    }
+    return
+  }
+  
+  // Markdown 类型：在抽屉中显示
+  if (item.materialType === 'markdown') {
+    try {
+      const res = await getMaterialDetail(item.id)
+      if (res.code === 200) {
+        currentMaterial.value = res.data
+        mobileDrawerType.value = 'material-detail'
+        drawerHeight.value = maxDrawerHeight // 资料详情全屏显示
+      }
+    } catch (error) {
+      ElMessage.error('加载资料失败')
+    }
+  }
+}
+
+// 抽屉拖拽相关
+let touchStartY = 0
+let touchStartHeight = 0
+
+const onDrawerTouchStart = (e) => {
+  touchStartY = e.touches[0].clientY
+  touchStartHeight = drawerHeight.value
+}
+
+const onDrawerTouchMove = (e) => {
+  const deltaY = touchStartY - e.touches[0].clientY
+  const newHeight = touchStartHeight + deltaY
+  drawerHeight.value = Math.min(Math.max(newHeight, minDrawerHeight), maxDrawerHeight)
+}
+
+const onDrawerTouchEnd = (e) => {
+  // 如果拖到很低，关闭抽屉
+  if (drawerHeight.value < minDrawerHeight + 50) {
+    closeMobileDrawer()
+  }
+}
+
 watch(() => route.params.id, () => {
   // 并行加载章节和资料
   Promise.all([loadChapter(), loadMaterials()])
   setupScrollElement()
+  closeMobileDrawer() // 切换章节时关闭抽屉
+  // 重置内嵌资料面板状态
+  inlineMaterialsExpanded.value = false
+  inlineExpandedMaterial.value = null
 })
 
 onMounted(() => {
   // 并行加载章节和资料
   Promise.all([loadChapter(), loadMaterials()])
   setupScrollElement()
+  
+  // 检测移动端
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
 })
 </script>
 
@@ -941,6 +1306,124 @@ onMounted(() => {
       }
     }
   }
+}
+
+// 底部学习资料区域
+.bottom-materials-section {
+  margin: 0 40px 24px;
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.04) 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+
+  .el-icon {
+    font-size: 22px;
+    color: var(--primary-color);
+  }
+
+  h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .material-count {
+    font-size: 14px;
+    color: var(--text-secondary);
+    background: var(--bg-primary);
+    padding: 4px 12px;
+    border-radius: 12px;
+  }
+}
+
+.materials-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.material-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  background: var(--bg-primary);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.25s;
+  border: 1px solid var(--border-light);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--shadow-color);
+    border-color: var(--primary-color);
+
+    .card-arrow {
+      transform: translateX(4px);
+      color: var(--primary-color);
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  .el-icon {
+    font-size: 24px;
+    color: white;
+  }
+
+  .type-markdown & { background: linear-gradient(135deg, #409eff, #66b1ff); }
+  .type-pdf & { background: linear-gradient(135deg, #f56c6c, #f89898); }
+  .type-video & { background: linear-gradient(135deg, #67c23a, #85ce61); }
+  .type-link & { background: linear-gradient(135deg, #e6a23c, #ebb563); }
+}
+
+.card-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-type {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.card-arrow {
+  font-size: 16px;
+  color: var(--text-secondary);
+  transition: all 0.25s;
+  flex-shrink: 0;
 }
 
 // 文章底部
@@ -1600,6 +2083,23 @@ onMounted(() => {
       max-height: 50vh;
     }
   }
+
+  // iPad 等平板设备也显示底部工具栏
+  .mobile-bottom-bar {
+    display: block;
+  }
+
+  .mobile-drawer-mask {
+    display: block;
+  }
+
+  .mobile-drawer {
+    display: flex;
+  }
+
+  .chapter-body {
+    padding-bottom: 80px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -1619,18 +2119,67 @@ onMounted(() => {
     justify-content: center;
   }
 
+  .header-right {
+    display: none; // 移动端隐藏顶部完成按钮，使用底部工具栏
+  }
+
   .chapter-body {
     padding: 16px;
+    padding-bottom: 80px; // 为底部工具栏留出空间
   }
 
   .article-header,
   .article-body,
   .article-footer {
-    padding: 20px;
+    padding: 16px;
   }
 
   .article-title {
-    font-size: 22px;
+    font-size: 20px;
+  }
+
+  // 底部资料区域移动端适配
+  .bottom-materials-section {
+    margin: 0 16px 16px;
+    padding: 16px;
+  }
+
+  .section-header {
+    margin-bottom: 14px;
+
+    .el-icon {
+      font-size: 18px;
+    }
+
+    h3 {
+      font-size: 16px;
+    }
+  }
+
+  .materials-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .material-card {
+    padding: 14px;
+  }
+
+  .card-icon {
+    width: 42px;
+    height: 42px;
+
+    .el-icon {
+      font-size: 20px;
+    }
+  }
+
+  .card-title {
+    font-size: 14px;
+  }
+
+  .article-footer {
+    display: none; // 移动端隐藏底部操作区，使用底部工具栏
   }
 
   .footer-actions {
@@ -1653,5 +2202,355 @@ onMounted(() => {
       padding: 16px;
     }
   }
+}
+
+// ========== 移动端底部工具栏 ==========
+.mobile-bottom-bar {
+  display: none; // 默认隐藏，通过媒体查询显示
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-primary);
+  border-top: 1px solid var(--border-light);
+  padding: 8px 12px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  z-index: 200;
+  box-shadow: 0 -2px 12px var(--shadow-color);
+}
+
+.bar-actions {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 8px;
+}
+
+.bar-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 11px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  min-width: 56px;
+
+  .el-icon {
+    font-size: 20px;
+  }
+
+  .badge {
+    position: absolute;
+    top: 2px;
+    right: 6px;
+    background: var(--primary-color);
+    color: white;
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 10px;
+    min-width: 16px;
+    text-align: center;
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &.active {
+    color: var(--primary-color);
+    background: rgba(64, 158, 255, 0.1);
+  }
+
+  &.primary {
+    background: var(--primary-color);
+    color: white;
+
+    &:active {
+      background: #3a8ee6;
+    }
+  }
+
+  &.success {
+    background: var(--success-color);
+    color: white;
+  }
+}
+
+// ========== 移动端抽屉 ==========
+.mobile-drawer-mask {
+  display: none; // 默认隐藏，通过媒体查询显示
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 300;
+}
+
+.mobile-drawer {
+  display: none; // 默认隐藏，通过媒体查询显示
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-primary);
+  border-radius: 20px 20px 0 0;
+  z-index: 301;
+  flex-direction: column;
+  max-height: 85vh;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.drawer-handle {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 4px;
+  background: var(--border-color);
+  border-radius: 2px;
+}
+
+.drawer-title {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  padding-top: 8px;
+
+  .el-icon {
+    font-size: 18px;
+    color: var(--primary-color);
+  }
+
+  .count {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: normal;
+  }
+}
+
+.drawer-close {
+  padding: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 8px;
+  margin-top: 8px;
+
+  .el-icon {
+    font-size: 20px;
+  }
+
+  &:active {
+    background: var(--bg-secondary);
+  }
+}
+
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+}
+
+// 移动端资料列表
+.mobile-materials-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mobile-material-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:active {
+    transform: scale(0.98);
+    background: var(--bg-tertiary);
+  }
+
+  .material-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    .el-icon {
+      font-size: 22px;
+      color: white;
+    }
+  }
+
+  &.type-markdown .material-icon {
+    background: linear-gradient(135deg, #409eff, #66b1ff);
+  }
+  &.type-pdf .material-icon {
+    background: linear-gradient(135deg, #f56c6c, #f89898);
+  }
+  &.type-video .material-icon {
+    background: linear-gradient(135deg, #67c23a, #85ce61);
+  }
+  &.type-link .material-icon {
+    background: linear-gradient(135deg, #e6a23c, #ebb563);
+  }
+
+  .material-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .material-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .material-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .material-arrow {
+    font-size: 16px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+  }
+}
+
+// 移动端目录
+.mobile-toc {
+  .mobile-md-catalog {
+    :deep(.md-editor-catalog-link) {
+      display: block;
+      padding: 12px 16px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      border-radius: 8px;
+      margin-bottom: 4px;
+      transition: all 0.2s;
+
+      &:active {
+        background: var(--bg-secondary);
+      }
+
+      &.md-editor-catalog-active {
+        color: var(--primary-color);
+        background: rgba(64, 158, 255, 0.1);
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+// 移动端资料内容
+.mobile-material-content {
+  .mobile-md-content {
+    :deep(h2) {
+      font-size: 18px;
+      margin: 24px 0 14px;
+      padding: 12px 14px;
+    }
+
+    :deep(h3) {
+      font-size: 16px;
+      margin: 20px 0 12px;
+      padding: 10px 12px;
+    }
+
+    :deep(p) {
+      font-size: 15px;
+      line-height: 1.8;
+    }
+
+    :deep(ul), :deep(ol) {
+      > li {
+        padding: 10px 12px 10px 36px;
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+// 空状态
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  color: var(--text-secondary);
+
+  .el-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+  }
+
+  p {
+    font-size: 14px;
+  }
+}
+
+// 抽屉动画
+.drawer-enter-active,
+.drawer-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.drawer-enter-from,
+.drawer-leave-to {
+  opacity: 0;
+}
+
+.drawer-content-enter-active,
+.drawer-content-leave-active {
+  transition: transform 0.3s ease;
+}
+
+.drawer-content-enter-from,
+.drawer-content-leave-to {
+  transform: translateY(100%);
 }
 </style>

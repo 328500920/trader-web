@@ -30,19 +30,80 @@ const patternConfig = computed(() => {
   return null
 })
 
+// 生成前置随机K线数据
+const generatePrefixData = (startPrice, count) => {
+  const data = []
+  let price = startPrice
+  for (let i = count; i > 0; i--) {
+    const change = (Math.random() - 0.5) * 4
+    const open = price
+    const close = price + change
+    const high = Math.max(open, close) + Math.random() * 2
+    const low = Math.min(open, close) - Math.random() * 2
+    data.push({
+      date: `D${i}`,
+      open: +open.toFixed(2),
+      close: +close.toFixed(2),
+      high: +high.toFixed(2),
+      low: +low.toFixed(2)
+    })
+    price = close
+  }
+  return data.reverse()
+}
+
 const chartData = computed(() => {
-  if (patternConfig.value) return patternConfig.value.data
-  return props.data
+  let data = []
+  if (patternConfig.value) {
+    data = patternConfig.value.data
+  } else {
+    data = props.data
+  }
+  
+  // 如果数据少于12根，自动补充前置数据
+  const minBars = 12
+  if (data.length > 0 && data.length < minBars) {
+    const needCount = minBars - data.length
+    const firstBar = data[0]
+    const startPrice = firstBar.open || 100
+    const prefixData = generatePrefixData(startPrice, needCount)
+    // 重新编号日期
+    const combined = [...prefixData, ...data].map((item, idx) => ({
+      ...item,
+      date: `D${idx + 1}`
+    }))
+    return combined
+  }
+  return data
 })
 
-const chartAnnotations = computed(() => {
-  if (patternConfig.value) return patternConfig.value.annotations || []
-  return props.annotations
-})
-
+// 调整 highlights 索引（因为前面补充了数据）
 const chartHighlights = computed(() => {
-  if (patternConfig.value) return patternConfig.value.highlights || []
-  return props.highlights
+  const originalHighlights = patternConfig.value?.highlights || props.highlights || []
+  const originalData = patternConfig.value?.data || props.data || []
+  const minBars = 12
+  
+  if (originalData.length > 0 && originalData.length < minBars) {
+    const offset = minBars - originalData.length
+    return originalHighlights.map(idx => idx + offset)
+  }
+  return originalHighlights
+})
+
+// 调整 annotations 索引
+const chartAnnotations = computed(() => {
+  const originalAnnotations = patternConfig.value?.annotations || props.annotations || []
+  const originalData = patternConfig.value?.data || props.data || []
+  const minBars = 12
+  
+  if (originalData.length > 0 && originalData.length < minBars) {
+    const offset = minBars - originalData.length
+    return originalAnnotations.map(ann => ({
+      ...ann,
+      index: ann.index !== undefined ? ann.index + offset : ann.index
+    }))
+  }
+  return originalAnnotations
 })
 
 const chartIndicators = computed(() => {
@@ -154,32 +215,68 @@ const buildOption = () => {
   annotations.forEach(ann => {
     if (['stopLoss', 'target', 'support', 'resistance'].includes(ann.type)) {
       const lineStyle = {
-        stopLoss: { color: '#f44336', type: 'solid' },
-        target: { color: '#2196f3', type: 'solid' },
-        support: { color: '#4caf50', type: 'dashed' },
-        resistance: { color: '#f44336', type: 'dashed' }
+        stopLoss: { color: '#f44336', type: 'solid', width: 1 },
+        target: { color: '#2196f3', type: 'solid', width: 1 },
+        support: { color: '#4caf50', type: 'dashed', width: 1 },
+        resistance: { color: '#f44336', type: 'dashed', width: 1 }
+      }
+      const labelColor = {
+        stopLoss: '#f44336',
+        target: '#2196f3',
+        support: '#4caf50',
+        resistance: '#f44336'
       }
       markLines.push({
         yAxis: ann.price,
         name: ann.label || '',
         lineStyle: lineStyle[ann.type],
-        label: { formatter: ann.label, position: 'end' }
+        label: { 
+          formatter: ann.label, 
+          position: 'insideEndTop',
+          color: labelColor[ann.type],
+          fontSize: 12,
+          fontWeight: 'bold',
+          backgroundColor: 'rgba(255,255,255,0.9)',
+          padding: [2, 6],
+          borderRadius: 2
+        }
       })
     } else if (ann.type === 'entry') {
       markPoints.push({
         coord: [ann.index, ann.price],
         symbol: 'triangle',
-        symbolSize: 12,
+        symbolSize: 14,
         itemStyle: { color: '#4caf50' },
-        label: { show: true, formatter: ann.label || '入场', position: 'bottom', color: '#4caf50' }
+        label: { 
+          show: true, 
+          formatter: ann.label || '入场', 
+          position: 'top', 
+          color: '#4caf50',
+          fontSize: 12,
+          fontWeight: 'bold',
+          backgroundColor: 'rgba(255,255,255,0.9)',
+          padding: [2, 6],
+          borderRadius: 2
+        }
       })
     } else if (ann.type === 'text') {
       markPoints.push({
         coord: [ann.index, ann.price],
-        symbol: 'pin',
-        symbolSize: 30,
+        symbol: 'circle',
+        symbolSize: 8,
         itemStyle: { color: '#ff9800' },
-        label: { show: true, formatter: ann.label, position: 'inside', color: '#fff', fontSize: 10 }
+        label: { 
+          show: true, 
+          formatter: ann.label, 
+          position: 'top', 
+          color: '#ff9800',
+          fontSize: 12,
+          fontWeight: 'bold',
+          backgroundColor: 'rgba(255,255,255,0.9)',
+          padding: [2, 6],
+          borderRadius: 2,
+          distance: 5
+        }
       })
     }
   })
@@ -299,7 +396,7 @@ const buildOption = () => {
     })
     legend.push('成交量')
   } else {
-    grids.push({ left: 50, right: 20, top: '12%', bottom: '15%' })
+    grids.push({ left: 50, right: 60, top: '10%', bottom: '12%' })
     xAxes.push({ type: 'category', data: dates, axisLine: { lineStyle: { color: colors.border } }, axisLabel: { color: colors.text, fontSize: 10 } })
     yAxes.push({ type: 'value', scale: true, splitLine: { lineStyle: { color: colors.gridLine } }, axisLine: { lineStyle: { color: colors.border } }, axisLabel: { color: colors.text, fontSize: 10 } })
   }
@@ -363,6 +460,11 @@ const handleResize = () => {
   chart?.resize()
 }
 
+// 暴露resize方法给父组件调用
+defineExpose({
+  resize: handleResize
+})
+
 watch(() => [props.pattern, props.data, props.indicators, props.showVolume, themeStore.isDark], () => {
   updateChart()
 }, { deep: true })
@@ -382,5 +484,6 @@ onUnmounted(() => {
 .candlestick-chart {
   width: 100%;
   min-height: 200px;
+  box-sizing: border-box;
 }
 </style>

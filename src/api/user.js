@@ -1,6 +1,6 @@
 import request from '@/utils/request'
 
-// 获取用户列表
+// 用户列表
 export function getUserList(params) {
   return request({
     url: '/user/list',
@@ -28,14 +28,14 @@ export function updateUser(id, data) {
 }
 
 // 删除用户
-export function deleteUser(id) {
+export function deleteUserApi(id) {
   return request({
     url: `/user/${id}`,
     method: 'delete'
   })
 }
 
-// 修改用户状态
+// 更新用户状态
 export function updateUserStatus(id, status) {
   return request({
     url: `/user/${id}/status`,
@@ -44,18 +44,28 @@ export function updateUserStatus(id, status) {
   })
 }
 
-// 重置密码
-export function resetPassword(id) {
+// 重置用户密码
+export function resetUserPassword(id, password) {
   return request({
     url: `/user/${id}/reset-password`,
-    method: 'put'
+    method: 'put',
+    data: { password }
+  })
+}
+
+// 修改用户角色
+export function updateUserRole(id, role) {
+  return request({
+    url: `/user/${id}/role`,
+    method: 'put',
+    data: { role }
   })
 }
 
 // 更新个人资料
 export function updateProfile(data) {
   return request({
-    url: '/auth/profile',
+    url: '/user/profile',
     method: 'put',
     data
   })
@@ -64,7 +74,7 @@ export function updateProfile(data) {
 // 修改密码
 export function changePassword(data) {
   return request({
-    url: '/auth/password',
+    url: '/user/password',
     method: 'put',
     data
   })

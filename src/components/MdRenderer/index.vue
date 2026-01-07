@@ -47,9 +47,10 @@ const parsedBlocks = computed(() => {
   const blocks = []
   
   // 匹配 :::candlestick 语法
-  // 模式1: :::candlestick pattern_id:::
-  // 模式2: :::candlestick\n{json}\n:::
-  const regex = /:::candlestick\s*(\w+)?(?:\s*:::|[\r\n]+([\s\S]*?):::)/g
+  // 模式1: :::candlestick pattern_id::: (单行简写)
+  // 模式2: :::candlestick\n{json}\n::: (多行JSON配置)
+  // 使用更宽松的正则，支持 \r\n 和 \n 换行
+  const regex = /:::candlestick\s+(\w+)\s*:::|:::candlestick\s*[\r\n]+([\s\S]*?):::/g
   
   let lastIndex = 0
   let match

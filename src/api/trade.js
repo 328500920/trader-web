@@ -159,3 +159,95 @@ export function getPlanStats() {
     method: 'get'
   })
 }
+
+// ========== 成交记录（Binance导入） ==========
+export function getRecordList(params) {
+  return request({
+    url: '/trade/record/list',
+    method: 'get',
+    params
+  })
+}
+
+export function getRecordDetail(id) {
+  return request({
+    url: `/trade/record/${id}`,
+    method: 'get'
+  })
+}
+
+export function deleteRecord(id) {
+  return request({
+    url: `/trade/record/${id}`,
+    method: 'delete'
+  })
+}
+
+export function importRecords(formData) {
+  return request({
+    url: '/trade/record/import',
+    method: 'post',
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}
+
+export function getRecordStatistics(params) {
+  return request({
+    url: '/trade/record/statistics',
+    method: 'get',
+    params
+  })
+}
+
+
+// ========== 仓位历史（Binance导入） ==========
+export function getPositionList(params) {
+  return request({
+    url: '/trade/position/list',
+    method: 'get',
+    params
+  })
+}
+
+export function getPositionDetail(id) {
+  return request({
+    url: `/trade/position/${id}`,
+    method: 'get'
+  })
+}
+
+export function deletePosition(id) {
+  return request({
+    url: `/trade/position/${id}`,
+    method: 'delete'
+  })
+}
+
+export function importPositions(formData) {
+  return request({
+    url: '/trade/position/import',
+    method: 'post',
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}
+
+export function getPositionStatistics(params) {
+  return request({
+    url: '/trade/position/statistics',
+    method: 'get',
+    params
+  })
+}
+
+export function generateTradeLog(positionId) {
+  return request({
+    url: `/trade/position/${positionId}/generate-log`,
+    method: 'post'
+  })
+}

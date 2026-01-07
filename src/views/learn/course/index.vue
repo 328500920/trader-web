@@ -20,8 +20,8 @@
             <el-progress 
               type="circle" 
               :percentage="overallProgress" 
-              :width="70"
-              :stroke-width="6"
+              :width="50"
+              :stroke-width="5"
               :color="progressColors"
             />
             <div class="stat-label">总进度</div>
@@ -245,9 +245,9 @@ onMounted(() => {
 // 欢迎横幅
 .welcome-banner {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 16px;
-  padding: 32px;
-  margin-bottom: 32px;
+  border-radius: 12px;
+  padding: 16px 24px;
+  margin-bottom: 24px;
   color: white;
   position: relative;
   overflow: hidden;
@@ -285,13 +285,13 @@ onMounted(() => {
 
 .banner-text {
   h1 {
-    font-size: 28px;
+    font-size: 22px;
     font-weight: 700;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
   }
 
   p {
-    font-size: 16px;
+    font-size: 14px;
     opacity: 0.9;
   }
 }
@@ -304,28 +304,28 @@ onMounted(() => {
 .stat-card {
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(10px);
-  border-radius: 12px;
-  padding: 16px 24px;
+  border-radius: 10px;
+  padding: 10px 18px;
   text-align: center;
-  min-width: 100px;
+  min-width: 80px;
 
   .stat-value {
-    font-size: 32px;
+    font-size: 24px;
     font-weight: 700;
     line-height: 1.2;
   }
 
   .stat-label {
-    font-size: 13px;
+    font-size: 12px;
     opacity: 0.85;
-    margin-top: 4px;
+    margin-top: 2px;
   }
 
   &.progress-card {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
 
     :deep(.el-progress__text) {
       color: white !important;
@@ -338,22 +338,22 @@ onMounted(() => {
 .stages-container {
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  gap: 16px;
 }
 
 .stage-section {
   background: var(--bg-primary);
-  border-radius: 16px;
-  padding: 24px;
+  border-radius: 12px;
+  padding: 16px;
   box-shadow: 0 2px 12px var(--shadow-color);
 }
 
 .stage-header {
   display: flex;
   align-items: center;
-  gap: 20px;
-  padding-bottom: 20px;
-  margin-bottom: 24px;
+  gap: 16px;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
   border-bottom: 2px solid var(--border-light);
 
   &.stage-1 {
@@ -371,9 +371,9 @@ onMounted(() => {
 }
 
 .stage-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -381,7 +381,7 @@ onMounted(() => {
 
   .icon-text {
     color: white;
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 700;
   }
 }
@@ -390,38 +390,38 @@ onMounted(() => {
   flex: 1;
 
   h2 {
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 600;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
     color: var(--text-primary);
   }
 
   p {
-    font-size: 14px;
+    font-size: 13px;
     color: var(--text-secondary);
   }
 }
 
 .stage-progress {
   text-align: right;
-  min-width: 140px;
+  min-width: 120px;
 
   .progress-info {
     display: flex;
     align-items: baseline;
     justify-content: flex-end;
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: 6px;
+    margin-bottom: 6px;
   }
 
   .progress-text {
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 700;
     color: var(--text-primary);
   }
 
   .progress-label {
-    font-size: 13px;
+    font-size: 12px;
     color: var(--text-secondary);
   }
 }
@@ -429,14 +429,14 @@ onMounted(() => {
 // 课程网格
 .course-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
 }
 
 .course-card {
   background: var(--bg-secondary);
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 10px;
+  padding: 14px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 2px solid transparent;
@@ -481,12 +481,12 @@ onMounted(() => {
 
 .course-number {
   display: inline-block;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 16px;
+  font-size: 11px;
   font-weight: 600;
   color: white;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 
   &.stage-1-bg { background: linear-gradient(135deg, #409eff, #66b1ff); }
   &.stage-2-bg { background: linear-gradient(135deg, #67c23a, #85ce61); }
@@ -513,20 +513,20 @@ onMounted(() => {
 }
 
 .course-body {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 
   .course-title {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     line-height: 1.4;
   }
 
   .course-desc {
-    font-size: 13px;
+    font-size: 12px;
     color: var(--text-secondary);
-    line-height: 1.5;
+    line-height: 1.4;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -538,7 +538,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 12px;
+  padding-top: 10px;
   border-top: 1px solid var(--border-light);
 }
 
@@ -546,22 +546,22 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-secondary);
 }
 
 .progress-mini {
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-width: 100px;
+  gap: 6px;
+  min-width: 80px;
 
   .el-progress {
     flex: 1;
   }
 
   .progress-num {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-secondary);
     white-space: nowrap;
   }
@@ -574,12 +574,12 @@ onMounted(() => {
   right: 0;
   background: linear-gradient(135deg, var(--primary-color), #66b1ff);
   color: white;
-  padding: 10px;
+  padding: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  font-size: 14px;
+  gap: 4px;
+  font-size: 13px;
   font-weight: 500;
   opacity: 0;
   transform: translateY(100%);

@@ -256,7 +256,7 @@ const handleSearch = async () => {
     
     const res = await getTradeList(params)
     if (res.code === 200) {
-      tradeList.value = res.data.records || []
+      tradeList.value = res.data.list || []
       pagination.total = res.data.total || 0
     }
   } catch (error) {

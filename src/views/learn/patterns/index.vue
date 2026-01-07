@@ -57,7 +57,7 @@
         @click="showPatternDetail(pattern)"
       >
         <div class="card-chart">
-          <CandlestickChart :pattern="pattern.id" :height="180" :showTooltip="false" />
+          <CandlestickChart :pattern="pattern.id" :height="200" :showTooltip="false" />
         </div>
         <div class="card-info">
           <h3 class="pattern-name">{{ pattern.name }}</h3>
@@ -78,12 +78,19 @@
     <el-dialog
       v-model="detailVisible"
       :title="currentPattern?.name"
-      width="700px"
+      width="800px"
       class="pattern-dialog"
+      destroy-on-close
+      @opened="handleDialogOpened"
     >
       <div class="detail-content" v-if="currentPattern">
         <div class="detail-chart">
-          <CandlestickChart :pattern="currentPattern.id" :height="300" />
+          <CandlestickChart 
+            ref="dialogChartRef"
+            :key="currentPattern.id" 
+            :pattern="currentPattern.id" 
+            :height="350" 
+          />
         </div>
         <div class="detail-info">
           <div class="info-row">
@@ -113,7 +120,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick, watch } from 'vue'
 import CandlestickChart from '@/components/CandlestickChart/index.vue'
 import { getAllPatterns } from '@/components/CandlestickChart/patterns'
 
@@ -122,6 +129,7 @@ const filterType = ref('')
 const filterWeek = ref(0)
 const detailVisible = ref(false)
 const currentPattern = ref(null)
+const dialogChartRef = ref(null)
 
 const typeLabels = {
   bullish: '看涨',
@@ -143,6 +151,13 @@ const filteredPatterns = computed(() => {
 const showPatternDetail = (pattern) => {
   currentPattern.value = pattern
   detailVisible.value = true
+}
+
+// 弹框打开后触发图表resize
+const handleDialogOpened = () => {
+  nextTick(() => {
+    dialogChartRef.value?.resize()
+  })
 }
 </script>
 
@@ -213,7 +228,7 @@ const showPatternDetail = (pattern) => {
 
 .patterns-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 20px;
 }
 
@@ -231,8 +246,9 @@ const showPatternDetail = (pattern) => {
   }
 
   .card-chart {
-    padding: 12px;
+    padding: 16px;
     background: var(--bg-secondary);
+    min-height: 200px;
   }
 
   .card-info {
@@ -287,12 +303,22 @@ const showPatternDetail = (pattern) => {
 }
 
 .pattern-dialog {
+  :deep(.el-dialog__body) {
+    padding: 16px 20px;
+  }
+  
   .detail-content {
     .detail-chart {
       margin-bottom: 20px;
-      padding: 16px;
+      padding: 12px;
       background: var(--bg-secondary);
       border-radius: 8px;
+      width: 100%;
+      box-sizing: border-box;
+      
+      :deep(.candlestick-chart) {
+        width: 100% !important;
+      }
     }
 
     .detail-info {

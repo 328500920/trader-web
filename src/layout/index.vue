@@ -67,27 +67,57 @@
       <aside 
         class="layout-sidebar hide-on-mobile" 
         :class="{ collapsed: isCollapse }"
-        v-if="currentSubMenus.length > 0"
+        v-if="currentSidebarMenus.length > 0"
       >
-        <el-menu
-          :default-active="route.path"
-          :collapse="isCollapse"
-          router
-        >
-          <el-menu-item 
-            v-for="item in currentSubMenus" 
-            :key="item.path"
-            :index="item.path"
-            v-show="!item.meta?.hidden"
-          >
-            <el-icon v-if="item.meta?.icon"><component :is="item.meta.icon" /></el-icon>
-            <template #title>{{ item.meta?.title }}</template>
-          </el-menu-item>
-        </el-menu>
+        <div class="sidebar-menu">
+          <template v-for="group in currentSidebarMenus" :key="group.menuKey">
+            <!-- 有子菜单的分组 -->
+            <div v-if="group.children && group.children.length > 0" class="menu-group">
+              <div 
+                class="menu-group-header" 
+                v-if="!isCollapse"
+                @click="toggleGroup(group.menuKey)"
+              >
+                <el-icon v-if="group.icon" class="group-icon"><component :is="group.icon" /></el-icon>
+                <span class="group-title">{{ group.menuName }}</span>
+                <el-icon class="group-arrow" :class="{ expanded: expandedGroups.includes(group.menuKey) }">
+                  <ArrowRight />
+                </el-icon>
+              </div>
+              
+              <div class="menu-items" v-show="isCollapse || expandedGroups.includes(group.menuKey)">
+                <router-link
+                  v-for="item in group.children" 
+                  :key="item.menuKey"
+                  :to="getMenuPath(item)"
+                  class="menu-item"
+                  :class="{ active: isMenuActive(item) }"
+                >
+                  <div class="item-indicator"></div>
+                  <el-icon v-if="item.icon" class="item-icon"><component :is="item.icon" /></el-icon>
+                  <span class="item-title" v-if="!isCollapse">{{ item.menuName }}</span>
+                </router-link>
+              </div>
+            </div>
+            
+            <!-- 无子菜单的直接菜单项 -->
+            <div v-else class="menu-items no-group">
+              <router-link
+                :to="getMenuPath(group)"
+                class="menu-item"
+                :class="{ active: isMenuActive(group) }"
+              >
+                <div class="item-indicator"></div>
+                <el-icon v-if="group.icon" class="item-icon"><component :is="group.icon" /></el-icon>
+                <span class="item-title" v-if="!isCollapse">{{ group.menuName }}</span>
+              </router-link>
+            </div>
+          </template>
+        </div>
       </aside>
       
       <!-- 内容区 -->
-      <main class="layout-content" :class="{ 'no-sidebar': currentSubMenus.length === 0 }">
+      <main class="layout-content" :class="{ 'no-sidebar': currentSidebarMenus.length === 0 }">
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
             <component :is="Component" />
@@ -113,28 +143,54 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useThemeStore, useUserStore } from '@/store'
+import { useUserStore } from '@/store'
 import { ElMessageBox } from 'element-plus'
+import { ArrowRight } from '@element-plus/icons-vue'
 import TraderReminder from '@/components/TraderReminder.vue'
 import ThemeSwitch from '@/components/ThemeSwitch.vue'
 import GlobalSearch from '@/components/GlobalSearch.vue'
 
 const route = useRoute()
 const router = useRouter()
-const themeStore = useThemeStore()
 const userStore = useUserStore()
 
 const isCollapse = ref(false)
+const expandedGroups = ref([]) // 展开的分组
 
-// 主菜单
+// 主菜单（根据后端菜单数据）
 const mainMenus = computed(() => {
+  // 优先使用后端返回的菜单数据
+  if (userStore.menus && userStore.menus.length > 0) {
+    return userStore.menus.map(menu => ({
+      path: menu.path,
+      name: menu.menuKey,
+      meta: {
+        title: menu.menuName,
+        icon: menu.icon
+      },
+      children: menu.children || []
+    }))
+  }
+  
+  // 降级：使用前端路由配置（兼容旧逻辑）
   const routes = router.options.routes.find(r => r.path === '/')?.children || []
-  return routes.filter(r => r.meta && !r.meta.hidden && !r.meta.roles).map(r => ({
-    ...r,
-    path: r.path.startsWith('/') ? r.path : `/${r.path}`
-  }))
+  const userRole = userStore.role || 'student'
+  
+  return routes
+    .filter(r => {
+      // 隐藏的菜单不显示
+      if (!r.meta || r.meta.hidden) return false
+      // 如果没有设置 roles，所有人可见
+      if (!r.meta.roles) return true
+      // 检查用户角色是否在允许列表中
+      return r.meta.roles.includes(userRole)
+    })
+    .map(r => ({
+      ...r,
+      path: r.path.startsWith('/') ? r.path : `/${r.path}`
+    }))
 })
 
 // 移动端菜单
@@ -142,26 +198,82 @@ const mobileMenus = computed(() => {
   return mainMenus.value.slice(0, 5)
 })
 
-// 当前子菜单
-const currentSubMenus = computed(() => {
+// 当前一级菜单路径
+const currentTopPath = computed(() => {
   const pathParts = route.path.split('/').filter(Boolean)
-  if (pathParts.length === 0) return []
+  return pathParts.length > 0 ? '/' + pathParts[0] : ''
+})
+
+// 当前侧边栏菜单（支持三级结构）
+const currentSidebarMenus = computed(() => {
+  if (!currentTopPath.value) return []
   
-  const currentPath = '/' + pathParts[0]
+  // 从后端菜单数据获取
+  if (userStore.menus && userStore.menus.length > 0) {
+    const currentMenu = userStore.menus.find(m => m.path === currentTopPath.value)
+    return currentMenu?.children || []
+  }
+  
+  // 降级：使用前端路由配置
   const layoutRoutes = router.options.routes.find(r => r.path === '/')?.children || []
   const currentMenu = layoutRoutes.find(r => {
     const menuPath = r.path.startsWith('/') ? r.path : `/${r.path}`
-    return menuPath === currentPath
+    return menuPath === currentTopPath.value
   })
   
   if (currentMenu?.children) {
     return currentMenu.children.map(child => ({
-      ...child,
-      path: `${currentPath}/${child.path}`
+      menuKey: child.name,
+      menuName: child.meta?.title,
+      path: child.path,
+      icon: child.meta?.icon,
+      children: []
     }))
   }
   return []
 })
+
+// 获取菜单完整路径
+const getMenuPath = (menu) => {
+  if (!menu.path) return currentTopPath.value
+  if (menu.path.startsWith('/')) return menu.path
+  return `${currentTopPath.value}/${menu.path}`
+}
+
+// 判断菜单是否激活
+const isMenuActive = (menu) => {
+  const menuPath = getMenuPath(menu)
+  return route.path === menuPath || route.path.startsWith(menuPath + '/')
+}
+
+// 切换分组展开/收起
+const toggleGroup = (groupKey) => {
+  const index = expandedGroups.value.indexOf(groupKey)
+  if (index > -1) {
+    expandedGroups.value.splice(index, 1)
+  } else {
+    expandedGroups.value.push(groupKey)
+  }
+}
+
+// 自动展开当前激活菜单所在的分组
+watch(() => route.path, () => {
+  if (userStore.menus && userStore.menus.length > 0) {
+    const currentMenu = userStore.menus.find(m => m.path === currentTopPath.value)
+    if (currentMenu?.children) {
+      for (const group of currentMenu.children) {
+        if (group.children && group.children.length > 0) {
+          for (const item of group.children) {
+            if (isMenuActive(item) && !expandedGroups.value.includes(group.menuKey)) {
+              expandedGroups.value.push(group.menuKey)
+              break
+            }
+          }
+        }
+      }
+    }
+  }
+}, { immediate: true })
 
 const toggleSidebar = () => {
   isCollapse.value = !isCollapse.value
@@ -294,10 +406,150 @@ const handleCommand = (command) => {
   
   &.collapsed {
     width: 64px;
+    
+    .menu-item {
+      justify-content: center;
+      padding: 12px;
+      
+      .item-indicator {
+        display: none;
+      }
+      
+      .item-icon {
+        margin: 0;
+      }
+    }
   }
   
-  .el-menu {
-    border-right: none;
+  .sidebar-menu {
+    padding: 12px 0;
+  }
+  
+  // 菜单分组
+  .menu-group {
+    margin-bottom: 8px;
+    
+    &.first-group {
+      .menu-group-header {
+        margin-top: 0;
+      }
+    }
+  }
+  
+  // 分组标题
+  .menu-group-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    margin-top: 4px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s;
+    
+    &:hover {
+      background-color: var(--bg-secondary);
+    }
+    
+    .group-icon {
+      font-size: 16px;
+      color: var(--primary-color);
+    }
+    
+    .group-title {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .group-arrow {
+      font-size: 12px;
+      color: var(--text-secondary);
+      transition: transform 0.3s;
+      
+      &.expanded {
+        transform: rotate(90deg);
+      }
+    }
+  }
+  
+  // 菜单项容器
+  .menu-items {
+    padding: 2px 8px 2px 24px;
+    
+    &.no-group {
+      padding: 8px;
+    }
+  }
+  
+  // 菜单项
+  .menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px 10px 16px;
+    margin: 2px 0;
+    border-radius: 8px;
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    position: relative;
+    
+    .item-indicator {
+      width: 3px;
+      height: 0;
+      border-radius: 2px;
+      background: var(--primary-color);
+      transition: height 0.2s ease;
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    
+    .item-icon {
+      font-size: 16px;
+      color: var(--text-secondary);
+      transition: color 0.2s;
+      flex-shrink: 0;
+    }
+    
+    .item-title {
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    &:hover {
+      background-color: var(--bg-secondary);
+      
+      .item-icon {
+        color: var(--primary-color);
+      }
+    }
+    
+    &.active {
+      background: linear-gradient(90deg, rgba(64, 158, 255, 0.15), rgba(64, 158, 255, 0.05));
+      color: var(--primary-color);
+      
+      .item-indicator {
+        height: 16px;
+      }
+      
+      .item-icon {
+        color: var(--primary-color);
+      }
+      
+      .item-title {
+        font-weight: 500;
+      }
+    }
+  }
+  
+  .menu-divider {
+    margin: 8px 12px;
   }
 }
 

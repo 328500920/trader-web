@@ -39,6 +39,14 @@ export function deleteCourse(id) {
   })
 }
 
+// 管理员获取所有课程（包括草稿）
+export function getAllCourses() {
+  return request({
+    url: '/learn/course/all',
+    method: 'get'
+  })
+}
+
 // ========== 章节相关 ==========
 export function getChapterList(params) {
   return request({
@@ -120,9 +128,25 @@ export function getNoteList(params) {
   })
 }
 
+export function getNote(params) {
+  return request({
+    url: '/learn/note/get',
+    method: 'get',
+    params
+  })
+}
+
 export function createNote(data) {
   return request({
     url: '/learn/note',
+    method: 'post',
+    data
+  })
+}
+
+export function saveNote(data) {
+  return request({
+    url: '/learn/note/save',
     method: 'post',
     data
   })
@@ -140,6 +164,13 @@ export function deleteNote(id) {
   return request({
     url: `/learn/note/${id}`,
     method: 'delete'
+  })
+}
+
+export function getNoteStats() {
+  return request({
+    url: '/learn/note/stats',
+    method: 'get'
   })
 }
 

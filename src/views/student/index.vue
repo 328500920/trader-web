@@ -1,7 +1,7 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h2>用户管理</h2>
+      <h2>学员管理</h2>
       <el-button type="primary" @click="openCreateDialog">
         <el-icon><Plus /></el-icon>新建用户
       </el-button>
@@ -30,14 +30,14 @@
         <el-table-column prop="username" label="用户名" width="120" />
         <el-table-column prop="nickname" label="昵称" width="120" />
         <el-table-column prop="email" label="邮箱" />
-        <el-table-column label="角色" width="120">
+        <el-table-column label="角色" width="100">
           <template #default="{ row }">
             <el-tag :type="getRoleTagType(row.role)">
               {{ getRoleName(row.role) }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="状态" width="100">
+        <el-table-column label="状态" width="80">
           <template #default="{ row }">
             <el-switch 
               v-model="row.status" 
@@ -47,15 +47,16 @@
             />
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" width="180">
+        <el-table-column prop="createTime" label="创建时间" width="160">
           <template #default="{ row }">
             {{ formatDate(row.createTime) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="260" fixed="right">
+        <el-table-column label="操作" width="280" fixed="right">
           <template #default="{ row }">
+            <el-button text type="primary" size="small" @click="viewDetail(row)">详情</el-button>
             <el-button text type="primary" size="small" @click="editUser(row)">编辑</el-button>
-            <el-button text type="info" size="small" @click="changeRole(row)">修改角色</el-button>
+            <el-button text type="info" size="small" @click="changeRole(row)">角色</el-button>
             <el-button text type="warning" size="small" @click="resetPwd(row)">重置密码</el-button>
             <el-button text type="danger" size="small" @click="deleteUser(row)">删除</el-button>
           </template>
@@ -89,7 +90,6 @@
         </el-form-item>
         <el-form-item label="角色" required>
           <el-select v-model="userForm.role" style="width: 100%;">
-            <el-option label="管理员" value="admin" />
             <el-option label="讲师" value="teacher" />
             <el-option label="学员" value="student" />
           </el-select>
@@ -117,7 +117,6 @@
         </el-form-item>
         <el-form-item label="新角色" required>
           <el-select v-model="roleForm.newRole" style="width: 100%;">
-            <el-option label="管理员" value="admin" />
             <el-option label="讲师" value="teacher" />
             <el-option label="学员" value="student" />
           </el-select>
@@ -133,10 +132,20 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus } from '@element-plus/icons-vue'
-import { getUserList, createUser, updateUser, deleteUserApi, updateUserStatus, resetUserPassword, updateUserRole } from '@/api/user'
+import { 
+  getStudentList, 
+  createStudent, 
+  updateStudent, 
+  deleteStudent, 
+  updateStudentStatus, 
+  resetStudentPassword, 
+  updateStudentRole 
+} from '@/api/student'
 
+const router = useRouter()
 const loading = ref(false)
 const saving = ref(false)
 const savingRole = ref(false)
@@ -183,7 +192,7 @@ const formatDate = (dateStr) => {
 const loadData = async () => {
   loading.value = true
   try {
-    const res = await getUserList({
+    const res = await getStudentList({
       pageNum: pageNum.value,
       pageSize: pageSize.value,
       keyword: keyword.value
@@ -234,9 +243,9 @@ const saveUser = async () => {
   saving.value = true
   try {
     if (editingUser.value) {
-      await updateUser(editingUser.value.id, userForm)
+      await updateStudent(editingUser.value.id, userForm)
     } else {
-      await createUser(userForm)
+      await createStudent(userForm)
     }
     ElMessage.success('保存成功')
     showDialog.value = false
@@ -250,11 +259,11 @@ const saveUser = async () => {
 
 const handleStatusChange = async (row) => {
   try {
-    await updateUserStatus(row.id, row.status)
+    await updateStudentStatus(row.id, row.status)
     ElMessage.success('状态已更新')
   } catch (error) {
     row.status = row.status === 1 ? 0 : 1
-    ElMessage.error('更新状态失败')
+    ElMessage.error(error.message || '更新状态失败')
   }
 }
 
@@ -274,7 +283,7 @@ const saveRole = async () => {
 
   savingRole.value = true
   try {
-    await updateUserRole(roleForm.id, roleForm.newRole)
+    await updateStudentRole(roleForm.id, roleForm.newRole)
     ElMessage.success('角色修改成功')
     showRoleDialog.value = false
     loadData()
@@ -296,10 +305,10 @@ const resetPwd = (row) => {
       return
     }
     try {
-      await resetUserPassword(row.id, value)
+      await resetStudentPassword(row.id, value)
       ElMessage.success('密码已重置')
     } catch (error) {
-      ElMessage.error('重置密码失败')
+      ElMessage.error(error.message || '重置密码失败')
     }
   }).catch(() => {})
 }
@@ -307,13 +316,17 @@ const resetPwd = (row) => {
 const deleteUser = (row) => {
   ElMessageBox.confirm(`确定删除用户 ${row.username} 吗？`, '提示', { type: 'warning' }).then(async () => {
     try {
-      await deleteUserApi(row.id)
+      await deleteStudent(row.id)
       ElMessage.success('删除成功')
       loadData()
     } catch (error) {
-      ElMessage.error('删除失败')
+      ElMessage.error(error.message || '删除失败')
     }
   }).catch(() => {})
+}
+
+const viewDetail = (row) => {
+  router.push(`/student/detail/${row.id}`)
 }
 
 onMounted(() => {
